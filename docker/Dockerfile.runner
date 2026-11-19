@@ -1,0 +1,22 @@
+FROM python:3.12-slim-bookworm
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates curl bash dbus gnome-keyring libsecret-tools \
+    && rm -rf /var/lib/apt/lists/*
+# Official vendor installer. Record `agy --version`; rebuild explicitly to upgrade.
+# The vendor installer selects the current release, so builds are not bit-reproducible.
+RUN curl --proto '=https' --tlsv1.2 -fsS https://antigravity.google/cli/install.sh -o /tmp/install-agy.sh \
+    && bash /tmp/install-agy.sh --dir /usr/local/bin \
+    && rm -f /tmp/install-agy.sh \
+    && agy --version
+RUN useradd --create-home --uid 1000 reviewer \
+    && mkdir -p /work /home/reviewer/.gemini/antigravity-cli /run/user/1000 \
+    && chown -R 1000:1000 /work /home/reviewer /run/user/1000
+COPY src/common.py src/run_agy.py docker/unlock_keyring.py /app/
+COPY docker/runner-entrypoint.sh /app/
+COPY docker/agy-settings.json /home/reviewer/.gemini/antigravity-cli/settings.json
+ENV HOME=/home/reviewer XDG_RUNTIME_DIR=/run/user/1000 \
+    DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus \
+    GNOME_KEYRING_CONTROL=/run/user/1000/keyring
+USER 1000:1000
+WORKDIR /work
+ENTRYPOINT ["/bin/sh", "/app/runner-entrypoint.sh"]

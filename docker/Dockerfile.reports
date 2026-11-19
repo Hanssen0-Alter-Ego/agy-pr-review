@@ -1,0 +1,7 @@
+FROM python:3.12-slim-bookworm
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt \
+    && useradd --create-home --uid 1000 reports
+COPY src/report_server.py /app/
+USER 1000:1000
+ENTRYPOINT ["python3", "/app/report_server.py"]

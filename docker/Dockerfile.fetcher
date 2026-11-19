@@ -1,0 +1,8 @@
+FROM python:3.12-slim-bookworm
+RUN apt-get update && apt-get install -y --no-install-recommends gh ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --uid 1000 fetcher
+COPY src/common.py src/fetcher.py /app/
+USER 1000:1000
+WORKDIR /tmp
+ENTRYPOINT ["python3", "/app/fetcher.py"]
