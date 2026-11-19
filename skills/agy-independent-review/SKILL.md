@@ -1,9 +1,31 @@
 ---
 name: agy-independent-review
-description: 用官方 Antigravity CLI（agy）和已授权的 Vault 凭据，对固定版本的公开 GitHub PR 做只读、独立的代码审查。适用于 Vault 登录、让 agy 按需读取本地源码和 diff、在同一会话补查并收取报告；不负责发布、合并或长期自动化。
+description: 用官方 Antigravity CLI（agy）和已授权的 Vault 凭据，对固定版本的公开 GitHub PR 做只读、独立的代码审查。适用于安装官方 CLI、Vault 登录、让 agy 按需读取本地源码和 diff、在同一会话补查并收取报告；不负责发布、合并或长期自动化。
 ---
 
 # Antigravity 独立审查
+
+## 0. 检查并安装官方 agy CLI
+
+- 先运行 `agy --version`；确认可用就复用，不重复安装。需要 agy 而当前环境没有可用 CLI 时，先尝试安装官方版本，不把「还没装」当成「不可用」。只安装到获准且可写的任务目录，不用 sudo，不改系统 PATH、现有登录状态或全局配置。
+- Linux 下按 [Google 官方安装说明](https://antigravity.google/docs/install?tab=cli#installation-flags)下载并检查安装器，再安装到临时目录。下例使用已验证的 `--dir`；安装器若另支持 `--skip-path` / `--skip-aliases`，可以额外使用。用独立 HOME 和 XDG 目录，避免安装器修改你的实际 shell 配置。选择审查源码之外、空间充足的可写任务目录，给下载和解包留空间。脚本尚未验证或不来自官方来源时不要运行。
+
+```sh
+install_root="$(mktemp -d "${TASK_SCRATCH:?set a writable task directory}/agy-install.XXXXXX")"
+mkdir -m 700 "$install_root/home" "$install_root/bin" \
+  "$install_root/config" "$install_root/cache" "$install_root/data" "$install_root/tmp"
+curl -fsSL --proto '=https' --proto-redir '=https' \
+  https://antigravity.google/cli/install.sh -o "$install_root/install.sh"
+# Check the downloaded installer and verify it supports --dir before running.
+bash -n "$install_root/install.sh"
+HOME="$install_root/home" XDG_CONFIG_HOME="$install_root/config" \
+  XDG_CACHE_HOME="$install_root/cache" XDG_DATA_HOME="$install_root/data" TMPDIR="$install_root/tmp" \
+  bash "$install_root/install.sh" --dir "$install_root/bin"
+AGY="$install_root/bin/agy"
+"$AGY" --version
+```
+
+- 运行安装器时不要注入 Vault、GitHub 或模型凭据。安装后用已验证的绝对路径 `"$AGY"` 启动 CLI，或只在本次子进程设置 PATH。确认可运行后再领凭据。仅在网络、平台、权限或安装失败确实阻止使用时说明原因并回退单审；不绕过限制。非 Linux 环境遵循官方对应平台方法。
 
 ## 1. 从 Vault 领取凭据并设置临时登录目录
 
