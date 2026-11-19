@@ -2,6 +2,10 @@
 
 在自己的 VPS 上，按需对一个已允许的 GitHub PR 做独立、只读的代码质量审查。操作者在 SSH 终端启动任务，VPS 直接用官方 Antigravity CLI（`agy -p`）生成报告。可选的 MCP 服务只供查看**已有**报告，不收提示词、不启动审查、不访问 GitHub，也不对 PR 发评论或审批。
 
+## 可复用 Skill
+
+[agy-independent-review](skills/agy-independent-review/SKILL.md) 记录直接在本地终端用固定源码和 diff 做独立审查的流程，包括兼容 Vault 的临时凭据交付。它与下文的 VPS runner 是不同路径，不改用或接入 runner 的 MCP。
+
 ## 使用边界
 
 Google 的 [Antigravity FAQ](https://antigravity.google/docs/faq) 将 `agy -p` 定位为直接脚本和 CI 用途；个人方案不支持在第三方 coding agent / 应用内包一层调用，也不支持自动换号。这里刻意不提供从聊天、MCP 或外部 webhook 触发 `agy` 的能力：先在自己控制的机器上直接生成报告，再由独立的只读服务交付结果。需要让第三方应用直接调用模型时，请走 Google 官方的 Gemini API / 企业路线，不要复用 Antigravity 登录会话。
